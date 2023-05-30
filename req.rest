@@ -1,0 +1,11 @@
+POST   http://localhost:3000/laundry/v1/register HTTP/1.1
+content-type: application/json
+{
+    "name":"rohith",
+    "email":"venkatrohith98@gmail.com",
+    "phone":9888888889,
+    "state":"AP",
+    "district":"East Godavari",
+    "address":"East Godavari",
+    "pincode":533103
+}

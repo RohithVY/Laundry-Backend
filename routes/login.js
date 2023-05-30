@@ -1,0 +1,82 @@
+const express = require("express");
+const router = express.Router();
+const User = require("../model/User");
+const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt");
+var jwt = require('jsonwebtoken');
+const { body, param, validationResult,oneOf } = require('express-validator');
+const SECRET = "laundryproject";
+
+
+router.use(bodyParser.urlencoded({extended:true}));
+
+router.use(bodyParser.json());
+
+
+
+router.get('/users',async(req,res)=>{
+    try{
+        const users = await User.find();
+        res.status(200).json({users})
+    }catch(err){
+        return res.status(400).json({
+            status:'succeess',
+            message:err.message
+
+        })
+    }
+})
+
+
+
+router.post('/login',oneOf([body("email"),body("phone")]), body("password"),async(req,res)=>{
+    try {
+        const error = validationResult(req)
+        if (!error.isEmpty()) {
+            return res.status(400).json({ errors: error.array() })
+        }
+        let user
+        console.log(req.body)
+        if(req.body.phone){
+            var {phone,password} = req.body
+            user = await User.findOne({ phone })
+        }else if(req.body.email){
+            var {email,password} = req.body
+            user = await User.findOne({ email })
+        }
+        if (!user) {
+            return res.status(401).json({
+                status: "failed",
+                message: "invalid user"
+            })
+        } 
+        bcrypt.compare(password,user.password).then(function(result){
+            if (result){
+                var token = jwt.sign({
+                    data: user._id
+                },SECRET,{ expiresIn: '7d'})
+               
+                return res.json({
+                    status:"OK",
+                    user:token  
+                   
+                })
+            }else{
+                return res.json({
+                    status:'error',
+                    user:false
+                })
+            }
+           
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            status: "Failed",
+            message: e.message
+        })
+    }
+})
+
+
+module.exports = router;
